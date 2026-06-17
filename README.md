@@ -1,3 +1,4 @@
-# Yuu Playground
+# Yuu Paint
+v1
 
-A playground to test and explore the default APIs of Yuu Online.
+A painting demo to help push the default APIs of Yuu Online.

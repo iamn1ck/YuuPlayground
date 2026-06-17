@@ -3,8 +3,9 @@ import { Quaternion } from "./Basic Types/Quaternion";
 import { Vector2 } from "./Basic Types/Vector2";
 import { Vector3 } from "./Basic Types/Vector3";
 import { Entity } from "./Entity";
-import { getRainbowWaveLoop2 } from "./rainbowWaveLoop2Model";
-import { getNissanGtr32Exp } from "./nissanGtr32ExpModel";
+import { getDoor } from "./doorModel";
+import { getNissanGtr32Exp } from "./nissan";
+import { getYuuchamber2 } from "./yuuchamber2Model";
 
 
 export const spawnPrimitive = {
@@ -13,7 +14,8 @@ export const spawnPrimitive = {
   sphere,
   cone,
   cubeScaled,
-  rainbowWaveLoop2,
+  door,
+  chamber,
   nissanGtr32Exp
 }
 
@@ -519,32 +521,48 @@ function getCone(columns: number): [Vector3[], Vector2[], number[]] {
 }
 
 
+
 /**
- * Create A RainbowWaveLoop2 Entity
- * @param pos to be created at
- * @param scale to start at
- * @param rot to start at
- * @param color to tint
- * @param alphaTransparency 0 is invisible, 1 is solid
- * @param colliderType collider type
- * @param type for animation and physics
- * @returns Entity created
+ * Create A door
+ 
  */
-function rainbowWaveLoop2(pos: Vector3, scale: Vector3, rot: Quaternion, color: Color, alphaTransparency: number, colliderType: 'None' | 'Convex' | 'Concave', type: BaseNodeTypes, parent: Entity | undefined): Entity {
+function door(pos: Vector3, scale: Vector3, rot: Quaternion, color: Color, alphaTransparency: number, hasCollider: boolean, type: BaseNodeTypes, parent: Entity | undefined): Entity {
   const entity = new Entity(pos, rot, Vector3.one, parent, type);
 
-  entity.mesh.create(...getRainbowWaveLoop2());
+  entity.mesh.create(...getDoor());
+
+  entity.mesh.color.set(color, Math.min(1, alphaTransparency));
+  entity.scale = scale;
+
+  if (hasCollider && entity.mesh.nodeID) {
+    entity.collider.createFromMeshNode(entity.mesh.nodeID, 'Concave');
+  }
+
+
+  return entity;
+}
+
+
+/**
+ * Create A door
+ 
+ */
+function chamber(pos: Vector3, scale: Vector3, rot: Quaternion, color: Color, alphaTransparency: number, hasCollider: boolean, type: BaseNodeTypes, parent: Entity | undefined): Entity {
+  const entity = new Entity(pos, rot, Vector3.one, parent, type);
+
+  entity.mesh.create(...getYuuchamber2());
 
   entity.mesh.color.set(color, Math.min(1, alphaTransparency));
 
-  if (colliderType !== 'None' && entity.mesh.nodeID) {
-    entity.collider.createFromMeshNode(entity.mesh.nodeID, colliderType);
+  if (hasCollider && entity.mesh.nodeID) {
+    entity.collider.createFromMeshNode(entity.mesh.nodeID, 'Convex');
   }
 
   entity.scale = scale;
 
   return entity;
 }
+
 
 /**
  * Create A Nissan Gtr R32 Exp Entity

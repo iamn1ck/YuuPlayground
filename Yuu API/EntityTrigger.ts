@@ -20,6 +20,13 @@ function onUpdate(deltaTime: number) {
   addToArray(playerPositions, Godot.localPlayer.rightHand.position.get());
   addToArray(playerPositions, Godot.localPlayer.foot.position.get());
 
+  // Also check CubeEntity instances from the cube gun
+  Entity.getAllEntities().forEach((entity) => {
+    if ((entity as any).isCubeEntity) {
+      addToArray(playerPositions, entity.pos);
+    }
+  });
+
   entity_Data.triggerMap.forEach((payload, entityNodeID) => {
     // Current Sphere / Cylinder triggers only work upright
     // Need Cube triggers with directions badly
@@ -47,14 +54,41 @@ function onUpdate(deltaTime: number) {
       playerPositions.forEach((pos) => {
         let isInTrigger = false;
 
-        if (payload.yRadius === undefined) {
-          isInTrigger = entityPos.distanceTo(pos) < payload.triggerRadius;
+        if (payload.boxSize) {
+          const offset = pos.subtract(entityPos);
+          let rightAxis = entity.right;
+          let upAxis = entity.up;
+          let forwardAxis = entity.forward;
+
+          const rMag = rightAxis.magnitude();
+          if (rMag > 0) rightAxis = rightAxis.divide(rMag);
+          const uMag = upAxis.magnitude();
+          if (uMag > 0) upAxis = upAxis.divide(uMag);
+          const fMag = forwardAxis.magnitude();
+          if (fMag > 0) forwardAxis = forwardAxis.divide(fMag);
+
+          const localX = offset.dot(rightAxis);
+          const localY = offset.dot(upAxis);
+          const localZ = offset.dot(forwardAxis);
+
+          if (
+            Math.abs(localX) <= payload.boxSize.x * 0.5 &&
+            Math.abs(localY) <= payload.boxSize.y * 0.5 &&
+            Math.abs(localZ) <= payload.boxSize.z * 0.5
+          ) {
+            isInTrigger = true;
+          }
+        }
+        else if (payload.yRadius === undefined) {
+          if (payload.triggerRadius !== undefined) {
+            isInTrigger = entityPos.distanceTo(pos) < payload.triggerRadius;
+          }
         }
         else {
           const distVec = entityPos.subtract(pos);
 
           if (Math.abs(distVec.y) < payload.yRadius) {
-            if (((distVec.x * distVec.x) + (distVec.z * distVec.z)) < (payload.triggerRadius * payload.triggerRadius)) {
+            if (payload.triggerRadius !== undefined && ((distVec.x * distVec.x) + (distVec.z * distVec.z)) < (payload.triggerRadius * payload.triggerRadius)) {
               isInTrigger = true;
             }
           }
